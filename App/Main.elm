@@ -1,31 +1,33 @@
 module Main where
 
-import Html exposing (div, text, Html)
-import StartApp.Simple as StartApp
+import StartApp
 import Signal exposing (Address)
+import Task
+import Model exposing (init, update, Model)
+import Actions exposing (Action)
+import Router exposing (view)
+import Routes
+import Effects exposing (Never)
+import History
+
+pathChanges : Signal Action
+pathChanges =
+    Signal.map Actions.UpdatePath History.hash
 
 -- # Main
 
-main =
-  StartApp.start { model = model, view = view, update = update }
+app =
+    StartApp.start
+        { init = init initialPath
+        , view = view
+        , update = update
+        , inputs = [ pathChanges ]
+        }
 
--- # Model
+main = app.html
 
-type alias Model = String
-model : Model
-model = ""
+port tasks : Signal (Task.Task Never ())
+port tasks =
+    app.tasks
 
--- # Actions
-
-update : Action -> Model -> Model
-update action model =
-  case action of
-    NoOp -> model
-
--- # View
-
-type Action = NoOp
-
-view : Address Action -> Model -> Html
-view address model =
-  div [] [text "Hello, verld."]
+port initialPath : String
