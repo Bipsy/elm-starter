@@ -12,10 +12,29 @@ import Views.Helpers as Helpers
 import Views.Helper as Helper
 import Signal exposing (Address, forwardTo)
 import Views.Requests as Requests
+import Components.Nav as Nav
 
 
 view : Address Action -> Model -> Html
 view address model =
+  let
+    header =
+      Nav.nav
+    body =
+      route address model
+    footer =
+      div [] [ text "Footer" ]
+  in
+    div
+      []
+      [ header
+      , body
+      , footer
+      ]
+
+
+route : Address Action -> Model -> Html
+route address model =
     case model.currentRoute of
 
         Routes.NotFound ->

@@ -12,11 +12,11 @@ import Task
 import String
 import Components.PageButtons as PageButtons
 import Components.PageButton as PB
+import Config exposing (apiUrl)
 
 
-apiUrl : String
-apiUrl =
-  "https://api-staging.ancestorcloud.com/users"
+helperUrl =
+  apiUrl ++ "users/"
 
 
 defaultOffset : Int
@@ -53,7 +53,7 @@ createUrl base offset limit =
 init : ( Model, Effects Action )
 init =
   let
-    url = createUrl apiUrl defaultOffset defaultLimit
+    url = createUrl helperUrl defaultOffset defaultLimit
 
     initialModel = empty
   in
@@ -126,7 +126,7 @@ update action model =
           newModel =
             { model | offset = model.offset + model.limit }
 
-          newUrl = createUrl apiUrl newModel.offset model.limit
+          newUrl = createUrl helperUrl newModel.offset model.limit
 
           effects = getHelpers newUrl
         in
@@ -140,7 +140,7 @@ update action model =
           newModel =
             { model | offset = model.offset - model.limit }
 
-          newUrl = createUrl apiUrl newModel.offset model.limit
+          newUrl = createUrl helperUrl newModel.offset model.limit
 
           effects = getHelpers newUrl
         in

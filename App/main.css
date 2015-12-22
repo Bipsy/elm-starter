@@ -87,3 +87,16 @@
 .SelectorOption {
   width: auto;
 }
+
+.Nav {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  width: 400px;
+}
+
+.NavLink {
+  text-decoration: underline;
+  margin: 0 10px;
+  font-size: x-large;
+}

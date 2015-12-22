@@ -15,6 +15,7 @@ import Components.PageButton as PB
 import Components.PageButtons as PageButtons
 import Components.Selector as Selector
 import Debug exposing (log)
+import Config exposing (apiUrl, appUrl)
 
 
 -- Model
@@ -30,16 +31,19 @@ type alias Requests =
   List Request
 
 
-requestUrl = "https://staging.ancestorcloud.com/#/request/"
-
-
 limit = 48
+
+
+requestUrl = apiUrl ++ "jobs/"
+
+
+appRequestUrl = appUrl ++ "#/request/"
 
 
 createUrl : Int -> String -> String
 createUrl offset status =
   Http.url
-    "https://api-staging.ancestorcloud.com/jobs"
+    requestUrl
     [ ("offset", toString offset)
     , ("limit", toString limit)
     , ("status", status)
@@ -200,7 +204,7 @@ renderRequest { id, title, location, owner, reward, status, employed } =
     [ class "RequestCard" ]
     [ itemBlock
       "ID"
-      (Markdown (a [ href (requestUrl ++ id) ] [ text id ]))
+      (Markdown (a [ href (appRequestUrl ++ id) ] [ text id ]))
     , itemBlock
       "Title"
       (Text title)
