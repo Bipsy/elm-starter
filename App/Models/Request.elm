@@ -8,8 +8,10 @@ import Models.Shared exposing
   (Location, decodeLocation, emptyLocation)
 import Json.Decode exposing
   ( Decoder, object8, string, oneOf, succeed, (:=)
-  , float
+  , float, maybe
   )
+import Json.Decode.Extra exposing
+  ( apply, (|:))
 
 type alias Request =
   { id : String
@@ -20,21 +22,41 @@ type alias Request =
   , owner : MiniHelper
   , reward : Float
   , status : String
+  , employed : Maybe MiniHelper
   }
+
+
+type Status
+  = Pending
+  | Open
+  | Connected
+  | Completed
+  | Closed
+
+
+statusToString : Status -> String
+statusToString status =
+  case status of
+    Pending -> "pending"
+    Open -> "Open"
+    Connected -> "Connected"
+    Completed -> "Completed"
+    Closed -> "Closed"
 
 
 decodeRequest : Decoder Request
 decodeRequest =
   oneOf
-    [ object8 Request
-      ("_id" := string)
-      ("title" := string)
-      (oneOf ["background" := string, succeed "N/A"])
-      ("description" := string)
-      (oneOf ["location" := decodeLocation, succeed emptyLocation])
-      (oneOf ["owner" := decodeMiniHelper, succeed emptyMiniHelper])
-      (oneOf ["reward" := float, succeed 0 ])
-      (oneOf ["status" := string, succeed "N/A" ])
+    [ succeed Request
+      |: ("_id" := string)
+      |: ("title" := string)
+      |: (oneOf ["background" := string, succeed "N/A"])
+      |: ("description" := string)
+      |: (oneOf ["location" := decodeLocation, succeed emptyLocation])
+      |: (oneOf ["owner" := decodeMiniHelper, succeed emptyMiniHelper])
+      |: (oneOf ["reward" := float, succeed 0 ])
+      |: (oneOf ["status" := string, succeed "N/A" ])
+      |: (maybe ("employed" := decodeMiniHelper))
     , succeed emptyRequest
     ]
 
@@ -49,4 +71,5 @@ emptyRequest =
   , owner = emptyMiniHelper
   , reward = 0
   , status = "N/A"
+  , employed = Nothing
   }

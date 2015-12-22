@@ -1,18 +1,20 @@
 module Views.Requests where
 
 
-import Models.Request as Request exposing (Request)
+import Models.Request as Request exposing (Request, decodeRequest)
+import Models.Helper as Helper exposing (MiniHelper)
 import Html exposing (..)
 import Signal exposing (Address)
 import Effects exposing (Effects)
 import Task
 import Http
 import Json.Decode as Json exposing ((:=))
-import Models.Request exposing (Request, decodeRequest)
 import Html.Attributes exposing (class, href)
-import String exposing (toUpper)
+import String exposing (toUpper, toLower)
 import Components.PageButton as PB
 import Components.PageButtons as PageButtons
+import Components.Selector as Selector
+import Debug exposing (log)
 
 
 -- Model
@@ -20,6 +22,8 @@ import Components.PageButtons as PageButtons
 type alias Model =
   { requests : Requests
   , totalRequests : Int
+  , offset : Int
+  , selectedStatus : Request.Status
   }
 
 type alias Requests =
@@ -28,18 +32,17 @@ type alias Requests =
 
 requestUrl = "https://staging.ancestorcloud.com/#/request/"
 
-offset = 0
-
 
 limit = 48
 
 
-createUrl : String
-createUrl =
+createUrl : Int -> String -> String
+createUrl offset status =
   Http.url
     "https://api-staging.ancestorcloud.com/jobs"
     [ ("offset", toString offset)
     , ("limit", toString limit)
+    , ("status", status)
     ]
 
 
@@ -47,12 +50,14 @@ empty : Model
 empty =
   { requests = []
   , totalRequests = 0
+  , offset = 0
+  , selectedStatus = Request.Open
   }
 
 
 init : (Model, Effects Action)
 init =
-  (empty, initView createUrl)
+  (empty, initView (createUrl 0 (toLower "open")))
 
 
 decodeHelpers : Json.Decoder (Int, Requests)
@@ -73,6 +78,9 @@ initView url =
 
 type Action
   = Fetch (Maybe (Int, Requests))
+  | Prev
+  | Next
+  | UpdateStatus Request.Status
   | NoOp
 
 
@@ -94,7 +102,45 @@ update action model =
       in
         ( newModel, Effects.none )
 
-    NoOp -> (model, Effects.none)
+    Next ->
+      if model.offset + limit < model.totalRequests then
+        let
+          offset = model.offset + limit
+          status = Request.statusToString model.selectedStatus
+
+          (model', effects') =
+            ( { model | offset = offset + limit }
+            , initView (createUrl offset (toLower status))
+            )
+        in
+          ( model', effects' )
+      else
+        ( model, Effects.none )
+
+    Prev ->
+      if model.offset - limit >= 0 then
+        let
+          offset = model.offset - limit
+          status = Request.statusToString model.selectedStatus
+
+          (model', effects') =
+            ( { model | offset = offset }
+            , initView (createUrl offset (toLower status)))
+        in
+          ( model', effects' )
+      else
+        ( model, Effects.none )
+
+    NoOp ->
+      (model, Effects.none)
+
+    UpdateStatus status ->
+      let
+        stringStatus = toLower <| Request.statusToString status
+      in
+        ( { model | selectedStatus = status }
+        , initView (createUrl model.offset stringStatus)
+        )
 
 
 -- View
@@ -106,14 +152,42 @@ type Element
 view : Address Action -> Model -> Html
 view address model =
   let
-    prev = PB.button address NoOp "Prev"
-    next = PB.button address NoOp "Next"
+    buttons =
+      PageButtons.pair
+        (PB.button address Prev "Prev")
+        (PB.button address Next "Next")
+    listings =
+      List.map renderRequest model.requests
+    selector =
+      Selector.selector
+        address
+        selectActionCreator
+        [ "--", "PENDING", "OPEN", "CONNECTED", "COMPLETED", "CLOSED" ]
+
   in
     div []
-      <|
-        [ PageButtons.pair prev next ]
-        ++
-        (List.map renderRequest model.requests)
+      [ selector
+      , buttons
+      , div [] listings
+      ]
+
+
+selectActionCreator : String -> Action
+selectActionCreator string =
+  if string == "OPEN" then
+    UpdateStatus Request.Open
+  else if string == "PENDING" then
+    UpdateStatus Request.Pending
+  else if string == "CONNECTED" then
+    UpdateStatus Request.Connected
+  else if string == "COMPLETED" then
+    UpdateStatus Request.Completed
+  else if string == "CLOSED" then
+    UpdateStatus Request.Closed
+  else
+    let a = log "Status" string
+    in NoOp
+
 
 fullName : String -> String -> String
 fullName first last =
@@ -121,7 +195,7 @@ fullName first last =
 
 
 renderRequest : Request -> Html
-renderRequest { id, title, location, owner, reward, status } =
+renderRequest { id, title, location, owner, reward, status, employed } =
   div
     [ class "RequestCard" ]
     [ itemBlock
@@ -144,7 +218,24 @@ renderRequest { id, title, location, owner, reward, status } =
       (Markdown (a
         [ href ("#/helper/" ++ owner.id)]
         [ text <| fullName owner.firstName owner.lastName ]))
+    , itemBlock
+      "Helper"
+      (helperBlock employed)
     ]
+
+
+helperBlock : Maybe MiniHelper -> Element
+helperBlock maybeHelper =
+  case maybeHelper of
+    Just { id, firstName, lastName } ->
+      Markdown
+        <|
+          a
+            [ href ("#/helper/" ++ id) ]
+            [ text <| fullName firstName lastName ]
+
+    Nothing ->
+      Text "N/A"
 
 
 itemBlock : String -> Element -> Html

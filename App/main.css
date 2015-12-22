@@ -78,3 +78,12 @@
   flex-direction: row;
   margin: 5px;
 }
+
+.Selector {
+  display: inline-block;
+  width: 150px;
+}
+
+.SelectorOption {
+  width: auto;
+}
