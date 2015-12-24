@@ -225,6 +225,9 @@ renderRequest { id, title, location, owner, reward, status, employed } =
     , itemBlock
       "Helper"
       (helperBlock employed)
+    , a
+        [ href ("#/request/" ++ id ++ "/edit") ]
+        [ text "Edit" ]
     ]
 
 

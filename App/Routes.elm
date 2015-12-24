@@ -9,20 +9,18 @@ import Debug exposing (log)
 
 type Route
     = NotFound
-    | Home
-    | Name String
     | Helpers
     | Helper String
     | Requests
+    | EditRequest String
 
 
 routes : Parsers Route
 routes =
-    [ static Home "#/home"
-    , dyn1 Helper "#/helper/" string ""
-    , dyn1 Name "#/name/" string ""
+    [ dyn1 Helper "#/helper/" string ""
     , static Helpers "#/helpers"
     , static Requests "#/requests"
+    , dyn1 EditRequest "#/request/" string "/edit"
     ]
 
 getRoute : String -> Route

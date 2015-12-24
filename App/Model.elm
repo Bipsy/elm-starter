@@ -9,11 +9,13 @@ import Actions exposing (Action)
 import Views.Helpers as H
 import Views.Helper as Helper
 import Views.Requests as Requests
+import Views.EditRequest as EditRequest
 
 type alias Model =
     { currentRoute : Route
     , helpersModel : H.Model
     , activeHelper : Helper.Model
+    , activeRequest : EditRequest.Model
     , requestsModel : Requests.Model
     }
 
@@ -36,16 +38,6 @@ viewInit model =
     case model.currentRoute of
 
       Routes.NotFound ->
-          ( model
-          , Effects.none
-          )
-
-      Routes.Home ->
-          ( model
-          , Effects.none
-          )
-
-      Routes.Name name ->
           ( model
           , Effects.none
           )
@@ -80,12 +72,17 @@ viewInit model =
           , Effects.map Actions.Requests effects'
           )
 
+      Routes.EditRequest id ->
+        (model, Effects.none)
+
+
 empty : Model
 empty =
     { currentRoute = Routes.NotFound
     , helpersModel = H.empty
     , activeHelper = Helper.empty
     , requestsModel = Requests.empty
+    , activeRequest = EditRequest.empty
     }
 
 
@@ -121,10 +118,13 @@ update action model =
                 )
 
         Actions.Requests act ->
-            let
-                (requestsModel, requestsEffects) =
-                    Requests.update act model.requestsModel
-            in
-                ( { model | requestsModel = requestsModel }
-                , Effects.map Actions.Requests requestsEffects
-                )
+          let
+            (requestsModel, requestsEffects) =
+              Requests.update act model.requestsModel
+          in
+            ( { model | requestsModel = requestsModel }
+            , Effects.map Actions.Requests requestsEffects
+            )
+
+        Actions.EditRequest act ->
+          (model, Effects.none)
