@@ -10,14 +10,19 @@
     <div id="root"></div>
     <script>
       document.addEventListener("DOMContentLoaded", function() {
-      var app =
-        Elm.embed(
-          Elm.Main,
-          document.getElementById("root"),
-          {
-            initialPath: window.location.hash
-          }
-        )
+        var app =
+          Elm.embed(
+            Elm.Main,
+            document.getElementById("root"),
+            {
+              initialPath: window.location.hash,
+              token: JSON.parse(localStorage.getItem("token")) || ""
+            }
+          )
+
+        app.ports.saveToken.subscribe(function(token) {
+          localStorage.setItem("token", token)
+        })
       })
     </script>
   </body>

@@ -17,6 +17,7 @@ type alias Model =
     , activeHelper : Helper.Model
     , activeRequest : EditRequest.Model
     , requestsModel : Requests.Model
+    , token : String
     }
 
 
@@ -83,6 +84,7 @@ empty =
     , activeHelper = Helper.empty
     , requestsModel = Requests.empty
     , activeRequest = EditRequest.empty
+    , token = ""
     }
 
 

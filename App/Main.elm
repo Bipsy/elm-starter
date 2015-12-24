@@ -31,3 +31,10 @@ port tasks =
     app.tasks
 
 port initialPath : String
+port token : String
+
+port saveToken : Signal String
+port saveToken =
+  app.model
+    |> Signal.map (.token)
+    |> Signal.dropRepeats
